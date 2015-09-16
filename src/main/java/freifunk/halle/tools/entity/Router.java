@@ -10,6 +10,8 @@ import javax.persistence.Entity;
 public class Router {
 
 	private List<InetAddress> _addresses;
+	private int defaultIpV4Address;
+	private int defaultIpV6Address;
 	private String _hostname;
 	private String _boardType;
 	private String _firmwareVersion;
