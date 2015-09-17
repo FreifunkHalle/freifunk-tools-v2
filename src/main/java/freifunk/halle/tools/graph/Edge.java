@@ -38,7 +38,7 @@ public class Edge {
 	}
 
 	public double getEtx() {
-		return 1.0F / (_quality.getKey() * _quality.getValue());
+		return 1.0D / (_quality.getKey() * _quality.getValue());
 	}
 
 	public boolean direction(KeyValuePair<Node, InetAddress> from) {

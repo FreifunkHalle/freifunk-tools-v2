@@ -5,21 +5,17 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import freifunk.halle.tools.entity.Router;
-
 public class Node {
 
-	public Node(InetAddress mainAddress) {
-		// TODO Auto-generated constructor stub
-	}
+	private final InetAddress _mainIp;
+	private final List<InetAddress> _secIps = Lists.newArrayList();
 
-	private Router _router;
-	private InetAddress _mainIp;
-	private List<InetAddress> _secIps = Lists.newArrayList();
+	public Node(InetAddress mainAddress) {
+		_mainIp = mainAddress;
+	}
 
 	public void addSecIp(InetAddress ip) {
 		_secIps.add(ip);
-
 	}
 
 }

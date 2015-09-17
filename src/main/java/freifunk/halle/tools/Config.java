@@ -13,6 +13,9 @@ public class Config {
 	public static int OLSR_PORT = 9090;
 	public static Set<InetAddress> vpnConcentrators;
 
+	public static int parallelTasks = 10;
+	public static int cron = 10;
+
 	static {
 		vpnConcentrators = Sets.newHashSet();
 		try {

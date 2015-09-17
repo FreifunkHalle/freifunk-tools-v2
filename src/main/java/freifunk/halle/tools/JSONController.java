@@ -2,8 +2,6 @@ package freifunk.halle.tools;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 
 import javax.validation.constraints.Max;
@@ -34,8 +32,7 @@ public class JSONController {
 
 	@RequestMapping("/test")
 	@ResponseBody
-	String test() throws RestClientException, MalformedURLException, URISyntaxException, UnknownHostException {
-
+	String test() throws RestClientException, UnknownHostException {
 		InetAddress inetAddress = Inet4Address.getByName("10.62.7.26");
 		Hna hna = OlsrJsons.getOlsrHna(inetAddress, 9090);
 		Mid olsrMid = OlsrJsons.getOlsrMid(inetAddress, 9090);
@@ -45,36 +42,43 @@ public class JSONController {
 
 	@RequestMapping("/JSON.ashx")
 	@ResponseBody
-	ResponseEntity<FreifunkHalleMapResource> ffhtopo()
-			throws RestClientException, MalformedURLException, URISyntaxException, UnknownHostException {
+	ResponseEntity<FreifunkHalleMapResource> ffhtopo() {
 		FreifunkHalleMapResource resource = null;
-		return new ResponseEntity<FreifunkHalleMapResource>(resource, HttpStatus.NOT_IMPLEMENTED);
+		return new ResponseEntity<FreifunkHalleMapResource>(resource,
+				HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	@RequestMapping("/WikiJSON.ashx")
 	@ResponseBody
 	ResponseEntity<WikiResource> wikiJson() {
 		WikiResource resource = null;
-		return new ResponseEntity<WikiResource>(resource, HttpStatus.NOT_IMPLEMENTED);
+		return new ResponseEntity<WikiResource>(resource,
+				HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	@RequestMapping("/Topology.ashx")
 	@ResponseBody
-	ResponseEntity<RenderedTopologyResource> topology(@RequestParam("maxetx") @Min(0) double maxetx,
-			@RequestParam("zeig") @Min(0) @Max(2) int zeig, @RequestParam("nachkomma") @Min(0) @Max(99) int nachkomma,
+	ResponseEntity<RenderedTopologyResource> topology(
+			@RequestParam("maxetx") @Min(0) double maxetx,
+			@RequestParam("zeig") @Min(0) @Max(2) int zeig,
+			@RequestParam("nachkomma") @Min(0) @Max(99) int nachkomma,
 			@RequestParam("gesehen") @Min(0) double gesehen,
 			@RequestParam("groesse") @Min(0) @Max(10000) double groesse,
-			@RequestParam("ueberlapp") @Min(0) @Max(2) int ueberlapp, @RequestParam("format") String Format,
-			@RequestParam("db") boolean db, @RequestParam("format") @Format String format) {
+			@RequestParam("ueberlapp") @Min(0) @Max(2) int ueberlapp,
+			@RequestParam("format") String Format,
+			@RequestParam("db") boolean db,
+			@RequestParam("format") @Format String format) {
 		RenderedTopologyResource resource = null;
-		return new ResponseEntity<RenderedTopologyResource>(resource, HttpStatus.NOT_IMPLEMENTED);
+		return new ResponseEntity<RenderedTopologyResource>(resource,
+				HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	@RequestMapping("/ffmap")
 	@ResponseBody
 	ResponseEntity<FreifunkMapResource> ffmap() {
 		FreifunkMapResource resource = null;
-		return new ResponseEntity<FreifunkMapResource>(resource, HttpStatus.NOT_IMPLEMENTED);
+		return new ResponseEntity<FreifunkMapResource>(resource,
+				HttpStatus.NOT_IMPLEMENTED);
 	}
 
 }
