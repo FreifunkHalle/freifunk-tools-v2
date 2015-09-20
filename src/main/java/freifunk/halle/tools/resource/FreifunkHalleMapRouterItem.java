@@ -1,5 +1,7 @@
 package freifunk.halle.tools.resource;
 
+import java.util.Map;
+
 public class FreifunkHalleMapRouterItem extends AbstractRouterItem {
 
 	private String _hostname;
@@ -8,6 +10,5 @@ public class FreifunkHalleMapRouterItem extends AbstractRouterItem {
 	private double latitude;
 	private long mtime;
 	private int llaccuracy;
-	private Void _links;
-
+	private Map<String, LinkItem> _links;
 }

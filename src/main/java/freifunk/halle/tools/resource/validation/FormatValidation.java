@@ -9,22 +9,23 @@ import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import freifunk.halle.tools.resource.validation.Format.FormatValidation;
+import freifunk.halle.tools.resource.validation.FormatValidation.FormatValidator;
 
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = FormatValidation.class)
-public @interface Format {
+@Constraint(validatedBy = FormatValidator.class)
+public @interface FormatValidation {
 	String message() default "";
 
-	enum FormatEnum {
+	static enum FormatEnum {
 		PNG, SVG, PDF, DOT, INPUT
 	};
 
-	public static class FormatValidation implements ConstraintValidator<Format, String> {
+	public static class FormatValidator implements
+			ConstraintValidator<IpListValidation, String> {
 
 		@Override
-		public void initialize(Format constraintAnnotation) {
+		public void initialize(IpListValidation constraintAnnotation) {
 		}
 
 		@Override
@@ -36,6 +37,5 @@ public @interface Format {
 			}
 			return true;
 		}
-
 	}
 }

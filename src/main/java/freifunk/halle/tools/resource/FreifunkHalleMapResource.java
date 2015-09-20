@@ -1,7 +1,9 @@
 package freifunk.halle.tools.resource;
 
+import java.util.Map;
+
 public class FreifunkHalleMapResource {
 
-	private String _timestamp;
+	private Map<String, FreifunkHalleMapRouterItem> _topo;
 
 }

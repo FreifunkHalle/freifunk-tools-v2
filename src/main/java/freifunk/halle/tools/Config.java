@@ -5,9 +5,21 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Set;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.Sets;
 
+import freifunk.halle.tools.types.NetTools;
+
 public class Config {
+
+	private static final Supplier<Config> instance = new Supplier<Config>() {
+
+		@Override
+		public Config get() {
+			return new Config();
+		}
+
+	};
 
 	public static InetAddress OLSR_HOST;
 	public static int OLSR_PORT = 9090;
@@ -15,6 +27,25 @@ public class Config {
 
 	public static int parallelTasks = 10;
 	public static int cron = 10;
+	private NetTools _netTools;
+	private double _lastSeenGradient;
+	private String _graphvizPath;
+	private String _ipFilter;
+	private String _defaultFormat;
+
+	public String getDefaultFormat;
+
+	public String getGraphVizPath() {
+		return _graphvizPath;
+	}
+
+	public double getLastSeenGradient() {
+		return _lastSeenGradient;
+	}
+
+	public NetTools getNetTools() {
+		return _netTools;
+	}
 
 	static {
 		vpnConcentrators = Sets.newHashSet();
@@ -26,6 +57,10 @@ public class Config {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	public static Config getInstance() {
+		return instance.get();
 	}
 
 }

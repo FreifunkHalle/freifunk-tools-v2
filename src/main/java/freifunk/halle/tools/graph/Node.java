@@ -18,4 +18,18 @@ public class Node {
 		_secIps.add(ip);
 	}
 
+	public InetAddress getMainIp() {
+		return _mainIp;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		return _mainIp.equals(((Node) o).getMainIp());
+	}
+
+	@Override
+	public int hashCode() {
+		return _mainIp.hashCode();
+	}
+
 }

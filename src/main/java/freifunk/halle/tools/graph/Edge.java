@@ -11,7 +11,8 @@ public class Edge {
 
 	private KeyValuePair<Float, Float> _quality;
 
-	public Edge(KeyValuePair<Node, InetAddress> from, KeyValuePair<Node, InetAddress> to, Float q1, Float q2) {
+	public Edge(KeyValuePair<Node, InetAddress> from,
+			KeyValuePair<Node, InetAddress> to, Float q1, Float q2) {
 		_from = from;
 		_to = to;
 		_quality = new KeyValuePair<Float, Float>(q1, q2);
