@@ -2,6 +2,7 @@ package freifunk.halle.tools.graph;
 
 import java.net.InetAddress;
 
+import freifunk.halle.tools.resource.LinkItem.LinkType;
 import freifunk.halle.tools.types.KeyValuePair;
 
 public class Edge {
@@ -11,8 +12,13 @@ public class Edge {
 
 	private KeyValuePair<Float, Float> _quality;
 
-	public Edge(KeyValuePair<Node, InetAddress> from,
-			KeyValuePair<Node, InetAddress> to, Float q1, Float q2) {
+	private LinkType _type;
+
+	public LinkType getType() {
+		return _type;
+	}
+
+	public Edge(KeyValuePair<Node, InetAddress> from, KeyValuePair<Node, InetAddress> to, Float q1, Float q2) {
 		_from = from;
 		_to = to;
 		_quality = new KeyValuePair<Float, Float>(q1, q2);
@@ -32,6 +38,13 @@ public class Edge {
 
 	public InetAddress getToIp() {
 		return _to.getValue();
+	}
+
+	public InetAddress getToIp(Node from) {
+		if (_from.getKey().equals(from)) {
+			return _to.getValue();
+		}
+		return _from.getValue();
 	}
 
 	public KeyValuePair<Float, Float> getQuality() {

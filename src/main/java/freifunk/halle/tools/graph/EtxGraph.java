@@ -33,8 +33,7 @@ public class EtxGraph {
 		@Override
 		public EtxGraph get() {
 			try {
-				return new EtxGraph(OlsrJsons.getOlsrTopology(Config.OLSR_HOST,
-						Config.OLSR_PORT));
+				return new EtxGraph(OlsrJsons.getOlsrTopology(Config.OLSR_HOST, Config.OLSR_PORT));
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -55,8 +54,8 @@ public class EtxGraph {
 		};
 	}
 
-	public static final Supplier<EtxGraph> INSTANCE = Suppliers
-			.memoizeWithExpiration(parseFromOlsr, 5, TimeUnit.MINUTES);
+	public static final Supplier<EtxGraph> INSTANCE = Suppliers.memoizeWithExpiration(parseFromOlsr, 5,
+			TimeUnit.MINUTES);
 
 	private final List<Node> _vpnAdjacenceList;
 	private final Map<Node, Set<Edge>> _adjacenceList;
@@ -71,9 +70,8 @@ public class EtxGraph {
 		Set<Edge> edges = Sets.newHashSet();
 
 		Preconditions.checkNotNull(topology, "topology cannot be null");
-		List<TopologyEntry> topoEntries = Preconditions
-				.checkNotNull(topology.getTopology(),
-						"topology.getTopology() cannot be null");
+		List<TopologyEntry> topoEntries = Preconditions.checkNotNull(topology.getTopology(),
+				"topology.getTopology() cannot be null");
 
 		for (TopologyEntry entry : topoEntries) {
 			// PreEdit
@@ -98,13 +96,10 @@ public class EtxGraph {
 
 			// Main Adjacent
 
-			KeyValuePair<Node, InetAddress> from = new KeyValuePair<Node, InetAddress>(
-					fromNode, fromIp);
-			KeyValuePair<Node, InetAddress> to = new KeyValuePair<Node, InetAddress>(
-					toNode, toIp);
+			KeyValuePair<Node, InetAddress> from = new KeyValuePair<Node, InetAddress>(fromNode, fromIp);
+			KeyValuePair<Node, InetAddress> to = new KeyValuePair<Node, InetAddress>(toNode, toIp);
 
-			Edge newEdge = new Edge(from, to, entry.getLinkQuality(),
-					entry.getNeighborLinkQuality());
+			Edge newEdge = new Edge(from, to, entry.getLinkQuality(), entry.getNeighborLinkQuality());
 			if (edges.contains(newEdge)) {
 				continue;
 			}
@@ -125,8 +120,7 @@ public class EtxGraph {
 			_adjacenceList.get(toNode).add(newEdge);
 
 			// VPN adjacent
-			if (!_vpnAdjacenceList.contains(fromNode)
-					&& !_vpnAdjacenceList.contains(toNode)) {
+			if (!_vpnAdjacenceList.contains(fromNode) && !_vpnAdjacenceList.contains(toNode)) {
 				if (Config.vpnConcentrators.contains(toIp)) {
 					_vpnAdjacenceList.add(fromNode);
 				}
@@ -139,9 +133,7 @@ public class EtxGraph {
 
 	}
 
-	private Node getOrCreateNodeOf(
-			Map<InetAddress, Node> mainAddressNodeMapping,
-			InetAddress mainAddress) {
+	private Node getOrCreateNodeOf(Map<InetAddress, Node> mainAddressNodeMapping, InetAddress mainAddress) {
 		if (mainAddressNodeMapping.containsKey(mainAddress)) {
 			return mainAddressNodeMapping.get(mainAddress);
 		}
@@ -150,8 +142,7 @@ public class EtxGraph {
 		return newNode;
 	}
 
-	private EtxGraph(Map<Node, Set<Edge>> adjacenceList,
-			List<Node> vpnAdjacenceList) {
+	private EtxGraph(Map<Node, Set<Edge>> adjacenceList, List<Node> vpnAdjacenceList) {
 		_aliasMap = AliasMap.INSTANCE.get();
 		_adjacenceList = adjacenceList;
 		_vpnAdjacenceList = vpnAdjacenceList;
@@ -171,8 +162,7 @@ public class EtxGraph {
 			return Sets.newHashSet();
 		}
 		Set<Edge> edgeSet = _adjacenceList.get(ip);
-		Iterable<Node> transform = Iterables.transform(edgeSet,
-				adjacentNode(ip));
+		Iterable<Node> transform = Iterables.transform(edgeSet, adjacentNode(ip));
 		return Sets.newHashSet(transform);
 	}
 
@@ -211,8 +201,7 @@ public class EtxGraph {
 					Set<Edge> temp2 = adjacenceList.get(edge);
 					if (temp2.equals(_adjacenceList.get(edge))) {
 						temp2 = Sets.newHashSet(temp2);
-						adjacenceList
-								.put(adjacentNode(node).apply(edge), temp2);
+						adjacenceList.put(adjacentNode(node).apply(edge), temp2);
 					}
 					temp.remove(node);
 				}
@@ -226,8 +215,7 @@ public class EtxGraph {
 	// entfernt alle nicht von bestimmten Knoten aus erreichbaren Knoten und
 	// erstellt einen neuen Graphen
 	public EtxGraph removeUnreachableNodes(Iterable<Node> nodes) {
-		Map<Node, Set<Edge>> unvisitedNodes = ImmutableMap
-				.copyOf(_adjacenceList);
+		Map<Node, Set<Edge>> unvisitedNodes = ImmutableMap.copyOf(_adjacenceList);
 
 		Stack<Node> nodesToVisit = new Stack<Node>();
 		Iterator<Node> it = nodes.iterator();
@@ -252,9 +240,7 @@ public class EtxGraph {
 	public EtxGraph removeUnconnectedNodes(int mode) {
 		List<Node> nodesToRemove = Lists.newArrayList();
 		for (Entry<Node, Set<Edge>> node : _adjacenceList.entrySet())
-			if (node.getValue().size() == 0
-					&& (mode > 1 || (mode == 1 && !_vpnAdjacenceList
-							.contains(node.getKey()))))
+			if (node.getValue().size() == 0 && (mode > 1 || (mode == 1 && !_vpnAdjacenceList.contains(node.getKey()))))
 				nodesToRemove.add(node.getKey());
 		return removeNodes(nodesToRemove);
 	}

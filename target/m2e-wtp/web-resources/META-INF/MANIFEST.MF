@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
-Implementation-Vendor: Pivotal Software, Inc.
-Implementation-Title: freifunk-tools-v2 Maven Webapp
-Implementation-Version: 0.0.1-SNAPSHOT
-Implementation-Vendor-Id: freifunk-halle
-Build-Jdk: 1.7.0_79
+Implementation-Title: freifunk-tools-v2
+Implementation-Version: 0.0.1
 Built-By: mfuhrmeister
+Implementation-Vendor-Id: freifunk-halle
+Build-Jdk: 1.8.0_45
 Created-By: Maven Integration for Eclipse
+Implementation-Vendor: Freifunk Halle
 

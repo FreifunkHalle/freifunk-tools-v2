@@ -1,6 +1,7 @@
 package freifunk.halle.tools.graph;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -20,6 +21,17 @@ public class Node {
 
 	public InetAddress getMainIp() {
 		return _mainIp;
+	}
+
+	public List<InetAddress> getAllIps() {
+		ArrayList<InetAddress> resultList = Lists.newArrayList(_secIps);
+		resultList.add(_mainIp);
+		return resultList;
+	}
+
+	public boolean hasTunnelLink() {
+		// TODO check tunnel links
+		return false;
 	}
 
 	@Override

@@ -36,17 +36,13 @@ public class Topology {
 		}
 	};
 
-	public static void topology(HttpServletResponse response, double maxetx,
-			int zeig, int nachkomma, double gesehen, Double groesse,
-			int ueberlapp, boolean db, FormatValidation.FormatEnum format,
-			List<InetAddress> zeigip, List<InetAddress> erreichbar,
-			List<InetAddress> hvip, List<Double> zoom, Config config,
-			Locale locale) throws IOException {
-		EtxGraph Graph = EtxGraph.INSTANCE.get();
-		Graph = Graph.removeUnconnectedNodes(zeig);
+	public static void topology(HttpServletResponse response, double maxetx, int zeig, int nachkomma, double gesehen,
+			Double groesse, int ueberlapp, boolean db, FormatValidation.FormatEnum format, List<InetAddress> zeigip,
+			List<InetAddress> erreichbar, List<InetAddress> hvip, List<Double> zoom, Config config, Locale locale,
+			EtxGraph graph) throws IOException {
+		graph = graph.removeUnconnectedNodes(zeig);
 		if (erreichbar.size() > 0) {
-			Graph = Graph.removeUnreachableNodes(Iterables.transform(
-					erreichbar, toNode));
+			graph = graph.removeUnreachableNodes(Iterables.transform(erreichbar, toNode));
 		}
 
 		double ZoomNodeText = 1D;
@@ -60,8 +56,7 @@ public class Topology {
 			ZoomLinkThickness = zoom.size() > 3 ? zoom.get(3) : ZoomNodeBorder;
 		}
 
-		String SortOrder = ueberlapp == 0 ? "breadthfirst"
-				: (ueberlapp < 0 ? "nodesfirst" : "edgesfirst");
+		String SortOrder = ueberlapp == 0 ? "breadthfirst" : (ueberlapp < 0 ? "nodesfirst" : "edgesfirst");
 
 		String responseContentType;
 		switch (format) {
@@ -93,8 +88,7 @@ public class Topology {
 			Output = new OutputStreamWriter(response.getOutputStream());
 		} else {
 			List<String> command = Lists.newArrayList();
-			command.add(config.getGraphVizPath() + " -T "
-					+ format.toString().toLowerCase());
+			command.add(config.getGraphVizPath() + " -T " + format.toString().toLowerCase());
 			command.add("/A");
 			ProcessBuilder builder = new ProcessBuilder(command);
 			builder.directory(new File(System.getenv("temp")));
@@ -110,68 +104,50 @@ public class Topology {
 		Map<String, KeyValuePair<DateTime, String>> nodeData;
 		Output.write("graph Topologie {\n");
 		if (format != FormatValidation.FormatEnum.PNG && groesse == null) {
-			Output.write(String
-					.format(locale,
-							"Graph[ charset=\"utf-8\", start=\"0\", epsilon=\"0.01\", bgcolor=\"#ffffff\", outputorder=\"%s\"];\n",
-							SortOrder));
+			Output.write(String.format(locale,
+					"Graph[ charset=\"utf-8\", start=\"0\", epsilon=\"0.01\", bgcolor=\"#ffffff\", outputorder=\"%s\"];\n",
+					SortOrder));
 		} else {
-			Output.write(String
-					.format(locale,
-							"Graph[ charset=\"utf-8\", start=\"0\", size=\"%f,%f\", epsilon=\"0.01\", bgcolor=\"#ffffff\", outputorder=\"%s\"];\n",
-							groesse, groesse, SortOrder));
+			Output.write(String.format(locale,
+					"Graph[ charset=\"utf-8\", start=\"0\", size=\"%f,%f\", epsilon=\"0.01\", bgcolor=\"#ffffff\", outputorder=\"%s\"];\n",
+					groesse, groesse, SortOrder));
 		}
-		Output.write(String.format(locale,
-				"Edge[ fontname=\"BitStream\", fontsize=\"%f\"];\n",
-				12D * ZoomLinkText));
+		Output.write(String.format(locale, "Edge[ fontname=\"BitStream\", fontsize=\"%f\"];\n", 12D * ZoomLinkText));
 		if (!db) {
 			nodeData = Maps.newHashMap();
-			Output.write(String
-					.format(locale,
-							"Node[ fontname=\"BitStream\", shape=\"ellipse\", style=\"filled\", height=\"0\", fontsize=\"%f\", color=\"red\", penwidth=\"%f\"];\n",
-							12D * ZoomNodeText, ZoomNodeBorder));
+			Output.write(String.format(locale,
+					"Node[ fontname=\"BitStream\", shape=\"ellipse\", style=\"filled\", height=\"0\", fontsize=\"%f\", color=\"red\", penwidth=\"%f\"];\n",
+					12D * ZoomNodeText, ZoomNodeBorder));
 
 		} else {
-			Output.write(String
-					.format(locale,
-							"Node[ fontname=\"BitStream\", shape=\"ellipse\", style=\"filled\", height=\"%f\", fontsize=\"%f\", color=\"red\", penwidth=\"%f\"];\n",
-							0.6D * ZoomNodeText, 8D * ZoomNodeText,
-							ZoomNodeBorder));
+			Output.write(String.format(locale,
+					"Node[ fontname=\"BitStream\", shape=\"ellipse\", style=\"filled\", height=\"%f\", fontsize=\"%f\", color=\"red\", penwidth=\"%f\"];\n",
+					0.6D * ZoomNodeText, 8D * ZoomNodeText, ZoomNodeBorder));
 			nodeData = getNodeDataFromDb();
 		}
-		for (Node node : Graph.getNodeList()) {
+		for (Node node : graph.getNodeList()) {
 			KeyValuePair<DateTime, String> nodeProps;
 			String nodeIp = node.getMainIp().getHostAddress();
 			String shortIp = config.getNetTools().formatToShort(nodeIp);
 			if (nodeData.containsValue(nodeIp)) {
 				nodeProps = nodeData.get(nodeIp);
-				shortIp += (nodeProps.getValue() == null ? "" : "\n"
-						+ nodeProps.getValue());
-				Value = Math.max(new Period(DateTime.now().getMillis(),
-						nodeProps.getKey().getMillis()).getDays(), 0D);
+				shortIp += (nodeProps.getValue() == null ? "" : "\n" + nodeProps.getValue());
+				Value = Math.max(new Period(DateTime.now().getMillis(), nodeProps.getKey().getMillis()).getDays(), 0D);
 			} else
 				Value = 0D;
-			Output.write(String.format(
-					locale,
-					"\"%s\" [label=\"%s\", fillcolor=\"#%s\"]\n",
-					nodeIp,
-					shortIp,
-					getNodeColor(Math.pow(0.5D, Value / gesehen),
-							Graph.isHna(node), hvip.contains(node.getMainIp()))));
-			for (Edge link : Graph.getAdjacentEdges(node)) {
+			Output.write(String.format(locale, "\"%s\" [label=\"%s\", fillcolor=\"#%s\"]\n", nodeIp, shortIp,
+					getNodeColor(Math.pow(0.5D, Value / gesehen), graph.isHna(node), hvip.contains(node.getMainIp()))));
+			for (Edge link : graph.getAdjacentEdges(node)) {
 				Node toNode;
 				if (node.equals(link.getToNode())) {
 					toNode = link.getFromNode();
 				} else {
 					toNode = link.getToNode();
 				}
-				Output.write(String
-						.format(locale,
-								"\"%s\" -- \"%s\" [label=\"%f\", color=\"#%s\", penwidth=\"%f\", len=\"%f\"];\n",
-								nodeIp, toNode.getMainIp().getHostAddress(),
-								link.getEtx(), getLinkColor(link.getEtx()),
-								getLinkThickness(link.getEtx())
-										* ZoomLinkThickness,
-								getLinkLength(link.getEtx())));
+				Output.write(String.format(locale,
+						"\"%s\" -- \"%s\" [label=\"%f\", color=\"#%s\", penwidth=\"%f\", len=\"%f\"];\n", nodeIp,
+						toNode.getMainIp().getHostAddress(), link.getEtx(), getLinkColor(link.getEtx()),
+						getLinkThickness(link.getEtx()) * ZoomLinkThickness, getLinkLength(link.getEtx())));
 			}
 			Output.write("}\n");
 		}
@@ -199,7 +175,8 @@ public class Topology {
 		// "select \"IPv4\", \"LastSeen\", \"Data\" from " + Prefix +
 		// "Node\" left outer join (select \"NodeId\", \"Data\" from " + Prefix
 		// + "InfoValue\" where \"NameId\" = (select \"Id\" from " + Prefix +
-		// "InfoName\" where \"Data\" = 'ff_adm_loc') and \"Step\" = 0) \"Values\"  on \"Node\".\"Id\" = \"Values\".\"NodeId\"";
+		// "InfoName\" where \"Data\" = 'ff_adm_loc') and \"Step\" = 0)
+		// \"Values\" on \"Node\".\"Id\" = \"Values\".\"NodeId\"";
 		// NodeData.Add(Reader.GetString(0), new KeyValuePair<Date,
 		// String>(Reader.GetDateTime(1), Reader.IsDBNull(2) ? null :
 		// Reader.GetString(2)));
@@ -207,8 +184,7 @@ public class Topology {
 		return result;
 	}
 
-	private static String getNodeColor(double seen, boolean hna,
-			boolean highlight) {
+	private static String getNodeColor(double seen, boolean hna, boolean highlight) {
 		byte a;
 		int b;
 		if (highlight) {
@@ -238,8 +214,7 @@ public class Topology {
 	}
 
 	private static String getLinkColor(double etx) {
-		return getColor(boundColor(382.5D - Math.abs(85D * (etx - 5.5D))),
-				(byte) 0, boundColor(595D - 85D * etx));
+		return getColor(boundColor(382.5D - Math.abs(85D * (etx - 5.5D))), (byte) 0, boundColor(595D - 85D * etx));
 	}
 
 	private static byte boundColor(double Value) {

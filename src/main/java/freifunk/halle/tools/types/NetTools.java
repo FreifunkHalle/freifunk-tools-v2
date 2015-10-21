@@ -6,10 +6,10 @@ import com.google.common.base.Splitter;
 
 public class NetTools {
 
-	private static final Splitter SETTINGS_SEPARATION_SPLITTER = Splitter.on(
-			CharMatcher.anyOf(" \t\n\r")).omitEmptyStrings();
+	private static final Splitter SETTINGS_SEPARATION_SPLITTER = Splitter.on(CharMatcher.anyOf(" \t\n\r"))
+			.omitEmptyStrings();
 	// der Punkt, durch den eine IP-Adresse getrennt wird
-	private static final char[] _ipPartChars = { '.' };
+	private static final String _ipPartChars = "\\.";
 
 	// die Elemente einer IP-Adresse, die beim Verkürzen weggelassen werden
 	private String[] _ipFormatElements;
@@ -18,15 +18,11 @@ public class NetTools {
 	private String[] _ipParseElements;
 
 	public NetTools(String infoIPShortFormat, String infoIPLongParse) {
-		Preconditions.checkNotNull(infoIPShortFormat,
-				"infoIPShortFormat can not be null");
-		Preconditions.checkNotNull(infoIPLongParse,
-				"infoIPShortFormat can not be null");
+		Preconditions.checkNotNull(infoIPShortFormat, "infoIPShortFormat can not be null");
+		Preconditions.checkNotNull(infoIPLongParse, "infoIPShortFormat can not be null");
 
-		_ipFormatElements = (String[]) SETTINGS_SEPARATION_SPLITTER
-				.splitToList(infoIPShortFormat).toArray();
-		_ipParseElements = (String[]) SETTINGS_SEPARATION_SPLITTER.splitToList(
-				infoIPLongParse).toArray();
+		_ipFormatElements = (String[]) SETTINGS_SEPARATION_SPLITTER.splitToList(infoIPShortFormat).toArray();
+		_ipParseElements = (String[]) SETTINGS_SEPARATION_SPLITTER.splitToList(infoIPLongParse).toArray();
 	}
 
 	// macht einen Prefix einer IP-Adresse kanonisch
@@ -61,8 +57,7 @@ public class NetTools {
 			}
 			// andere Adress-Teile: wenn Adresse hat einen Punkt gefolgt vom
 			// passenden Adress-Teil
-			else if (ip.length() - Pos > _ipFormatElements[ZVar1].length()
-					&& ip.charAt(Pos) == '.'
+			else if (ip.length() - Pos > _ipFormatElements[ZVar1].length() && ip.charAt(Pos) == '.'
 					&& ip.substring(Pos + 1, _ipFormatElements[ZVar1].length()) == _ipFormatElements[ZVar1]) {
 				// Position anpassen und fortfahren
 				Pos += 1 + _ipFormatElements[ZVar1].length();
@@ -72,5 +67,31 @@ public class NetTools {
 			break;
 		}
 		return ip.substring(Pos);
+	}
+
+	public String ParseToLong(String ip) {
+		// abschließenden Punkt entfernen
+		if (ip.endsWith("."))
+			ip = ip.substring(0, ip.length() - 1);
+		// Adress-Teile zählen
+		int Count = ip.split(_ipPartChars).length;
+		// wenn vor einem führenden Punkt nichts steht oder die Adress-Länge
+		// null ist, einen Adress-Teil abziehen
+		boolean PointAtLeft;
+		if (PointAtLeft = (ip.length() == 0 || ip.charAt(0) == '.'))
+			Count--;
+		// wenn weniger als 4 Teile vorhanden und alle nicht vorhanden Teile
+		// bekannt
+		if (Count < 4 && 3 - Count < _ipParseElements.length)
+			for (int ZVar1 = 3 - Count; ZVar1 >= 0; ZVar1--) {
+				// neuen Teil ohne Punkt hinzufügen, wenn bisherige Adresse mit
+				// Punkt beginnt, sonst neuen Teil mit Punkt hinzufügen
+				if (PointAtLeft) {
+					ip = _ipParseElements[ZVar1] + ip;
+					PointAtLeft = false;
+				} else
+					ip = _ipParseElements[ZVar1] + "." + ip;
+			}
+		return ip;
 	}
 }

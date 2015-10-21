@@ -5,6 +5,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Set;
 
+import org.joda.time.Period;
+
 import com.google.common.base.Supplier;
 import com.google.common.collect.Sets;
 
@@ -21,6 +23,12 @@ public class Config {
 
 	};
 
+	private Config() {
+		// read xml config
+
+		new NetTools(_infoIPShortFormat, _infoIPShortFormat);
+	}
+
 	public static InetAddress OLSR_HOST;
 	public static int OLSR_PORT = 9090;
 	public static Set<InetAddress> vpnConcentrators;
@@ -31,9 +39,8 @@ public class Config {
 	private double _lastSeenGradient;
 	private String _graphvizPath;
 	private String _ipFilter;
-	private String _defaultFormat;
-
-	public String getDefaultFormat;
+	private Period _infoExpirationPeriod;
+	private String _infoIPShortFormat;
 
 	public String getGraphVizPath() {
 		return _graphvizPath;

@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.Produces;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestClientException;
 
+import freifunk.halle.tools.entity.Router;
+import freifunk.halle.tools.graph.EtxGraph;
+import freifunk.halle.tools.graph.Node;
 import freifunk.halle.tools.graph.Topology;
 import freifunk.halle.tools.olsrjson.Hna;
 import freifunk.halle.tools.olsrjson.Mid;
@@ -33,6 +37,7 @@ import freifunk.halle.tools.resource.validation.DoubleListValidation.DoubleListV
 import freifunk.halle.tools.resource.validation.FormatValidation;
 import freifunk.halle.tools.resource.validation.IpListValidation;
 import freifunk.halle.tools.resource.validation.IpListValidation.IpListValidator;
+import freifunk.halle.tools.types.KeyValuePair;
 
 @Controller
 @EnableAutoConfiguration
@@ -41,51 +46,42 @@ public class JSONController {
 	@RequestMapping("/test")
 	@ResponseBody
 	String test() throws RestClientException, UnknownHostException {
-		InetAddress inetAddress = Inet4Address.getByName("10.62.7.26");
+		InetAddress inetAddress = Inet4Address.getByName("10.62.2.131");
 		Hna hna = OlsrJsons.getOlsrHna(inetAddress, 9090);
 		Mid olsrMid = OlsrJsons.getOlsrMid(inetAddress, 9090);
-		freifunk.halle.tools.olsrjson.Topology olsrTopology = OlsrJsons
-				.getOlsrTopology(inetAddress, 9090);
+		freifunk.halle.tools.olsrjson.Topology olsrTopology = OlsrJsons.getOlsrTopology(inetAddress, 9090);
 		return "Hello World!";
 	}
 
 	@RequestMapping("/JSON.ashx")
+	@Produces("application/json")
 	@ResponseBody
 	ResponseEntity<FreifunkHalleMapResource> ffhtopo() {
-		FreifunkHalleMapResource resource = null;
-		return new ResponseEntity<FreifunkHalleMapResource>(resource,
-				HttpStatus.NOT_IMPLEMENTED);
+		FreifunkHalleMapResource resource = new FreifunkHalleMapResource(EtxGraph.INSTANCE.get());
+		return new ResponseEntity<FreifunkHalleMapResource>(resource, HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	@RequestMapping("/WikiJSON.ashx")
+	@Produces("application/json")
 	@ResponseBody
 	ResponseEntity<WikiResource> wikiJson() {
-		WikiResource resource = null;
-		return new ResponseEntity<WikiResource>(resource,
-				HttpStatus.NOT_IMPLEMENTED);
+		WikiResource resource = new WikiResource(EtxGraph.INSTANCE.get());
+		return new ResponseEntity<WikiResource>(resource, HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	@RequestMapping("/Topology.ashx")
-	@ResponseBody
-	void topology(
-			HttpServletResponse response,
-			HttpServletRequest request,
-			@RequestParam("maxetx") @Min(0) double maxetx,
-			@RequestParam("zeig") @Min(0) @Max(2) int zeig,
-			@RequestParam("nachkomma") @Min(0) @Max(99) int nachkomma,
-			@RequestParam("gesehen") @Min(0) Double gesehen,
+	void topology(HttpServletResponse response, HttpServletRequest request,
+			@RequestParam("maxetx") @Min(0) double maxetx, @RequestParam("zeig") @Min(0) @Max(2) int zeig,
+			@RequestParam("nachkomma") @Min(0) @Max(99) int nachkomma, @RequestParam("gesehen") @Min(0) Double gesehen,
 			@RequestParam("groesse") @Min(0) @Max(10000) double groesse,
-			@RequestParam("ueberlapp") @Min(0) @Max(2) int ueberlapp,
-			@RequestParam("db") boolean db,
+			@RequestParam("ueberlapp") @Min(0) @Max(2) int ueberlapp, @RequestParam("db") boolean db,
 			@RequestParam("format") @FormatValidation @DefaultValue("png") String format,
 			@RequestParam("zeigip") @IpListValidation String zeigip,
 			@RequestParam("erreichbar") @IpListValidation String erreichbar,
 			@RequestParam("hvip") @IpListValidation String hvip,
-			@RequestParam("zoom") @DoubleListValidation String zoom)
-			throws IOException {
+			@RequestParam("zoom") @DoubleListValidation String zoom) throws IOException {
 
-		FormatValidation.FormatEnum parsedFormat = FormatValidation.FormatEnum
-				.valueOf(format.toUpperCase());
+		FormatValidation.FormatEnum parsedFormat = FormatValidation.FormatEnum.valueOf(format.toUpperCase());
 		List<InetAddress> parsedHvIp = IpListValidator.parse(hvip);
 		List<InetAddress> parsedErreichbar = IpListValidator.parse(erreichbar);
 		List<InetAddress> parsedZeigIp = IpListValidator.parse(zeigip);
@@ -95,19 +91,22 @@ public class JSONController {
 		if (gesehen == null) {
 			gesehen = config.getLastSeenGradient();
 		}
+		EtxGraph graph = EtxGraph.INSTANCE.get();
 
-		Topology.topology(response, maxetx, zeig, nachkomma, gesehen, groesse,
-				ueberlapp, db, parsedFormat, parsedZeigIp, parsedErreichbar,
-				parsedHvIp, parsedZoom, config, request.getLocale());
+		Topology.topology(response, maxetx, zeig, nachkomma, gesehen, groesse, ueberlapp, db, parsedFormat,
+				parsedZeigIp, parsedErreichbar, parsedHvIp, parsedZoom, config, request.getLocale(), graph);
 
 	}
 
 	@RequestMapping("/ffmap")
+	@Produces("application/json")
 	@ResponseBody
 	ResponseEntity<FreifunkMapResource> ffmap() {
-		FreifunkMapResource resource = null;
-		return new ResponseEntity<FreifunkMapResource>(resource,
-				HttpStatus.NOT_IMPLEMENTED);
+		EtxGraph graph = EtxGraph.INSTANCE.get();
+		// TODO read from db
+		List<KeyValuePair<Router, Node>> bla = null;
+		FreifunkMapResource resource = new FreifunkMapResource(graph, bla);
+		return new ResponseEntity<FreifunkMapResource>(resource, HttpStatus.NOT_IMPLEMENTED);
 	}
 
 }

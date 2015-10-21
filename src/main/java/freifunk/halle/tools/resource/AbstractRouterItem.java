@@ -1,6 +1,6 @@
 package freifunk.halle.tools.resource;
 
-public class AbstractRouterItem {
+public abstract class AbstractRouterItem {
 
 	private String _board;
 	private String _ipv4;
