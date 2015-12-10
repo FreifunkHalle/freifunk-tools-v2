@@ -79,7 +79,7 @@ public class JSONController {
 			@RequestParam("zeigip") @IpListValidation String zeigip,
 			@RequestParam("erreichbar") @IpListValidation String erreichbar,
 			@RequestParam("hvip") @IpListValidation String hvip,
-			@RequestParam("zoom") @DoubleListValidation String zoom) throws IOException {
+			@RequestParam("zoom") @DoubleListValidation String zoom) throws IOException, InterruptedException {
 
 		FormatValidation.FormatEnum parsedFormat = FormatValidation.FormatEnum.valueOf(format.toUpperCase());
 		List<InetAddress> parsedHvIp = IpListValidator.parse(hvip);

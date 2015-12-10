@@ -1,15 +1,14 @@
 package freifunk.halle.tools.graph;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.joda.time.DateTime;
@@ -20,6 +19,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.ByteStreams;
 
 import freifunk.halle.tools.Config;
 import freifunk.halle.tools.resource.validation.FormatValidation;
@@ -39,7 +39,7 @@ public class Topology {
 	public static void topology(HttpServletResponse response, double maxetx, int zeig, int nachkomma, double gesehen,
 			Double groesse, int ueberlapp, boolean db, FormatValidation.FormatEnum format, List<InetAddress> zeigip,
 			List<InetAddress> erreichbar, List<InetAddress> hvip, List<Double> zoom, Config config, Locale locale,
-			EtxGraph graph) throws IOException {
+			EtxGraph graph) throws IOException, InterruptedException {
 		graph = graph.removeUnconnectedNodes(zeig);
 		if (erreichbar.size() > 0) {
 			graph = graph.removeUnreachableNodes(Iterables.transform(erreichbar, toNode));
@@ -81,46 +81,47 @@ public class Topology {
 		}
 		response.setContentType(responseContentType);
 
-		OutputStreamWriter Output;
-		Process GVProcess = null;
+		OutputStreamWriter output;
+		Process graphVizProcess = null;
 
 		if (format == FormatEnum.INPUT) {
-			Output = new OutputStreamWriter(response.getOutputStream());
+			output = new OutputStreamWriter(response.getOutputStream());
 		} else {
 			List<String> command = Lists.newArrayList();
 			command.add(config.getGraphVizPath() + " -T " + format.toString().toLowerCase());
 			command.add("/A");
 			ProcessBuilder builder = new ProcessBuilder(command);
 			builder.directory(new File(System.getenv("temp")));
-			GVProcess = builder.start();
+			graphVizProcess = builder.start();
 			// StartInfo.RedirectStandardInput = true;
 			// StartInfo.RedirectStandardOutput = true;
 			// StartInfo.CreateNoWindow = true;
 			// StartInfo.UseShellExecute = false;
-			Output = new OutputStreamWriter(GVProcess.getOutputStream());
+			output = new OutputStreamWriter(graphVizProcess.getOutputStream());
+
 		}
 
 		double Value;
 		Map<String, KeyValuePair<DateTime, String>> nodeData;
-		Output.write("graph Topologie {\n");
+		output.write("graph Topologie {\n");
 		if (format != FormatValidation.FormatEnum.PNG && groesse == null) {
-			Output.write(String.format(locale,
+			output.write(String.format(locale,
 					"Graph[ charset=\"utf-8\", start=\"0\", epsilon=\"0.01\", bgcolor=\"#ffffff\", outputorder=\"%s\"];\n",
 					SortOrder));
 		} else {
-			Output.write(String.format(locale,
+			output.write(String.format(locale,
 					"Graph[ charset=\"utf-8\", start=\"0\", size=\"%f,%f\", epsilon=\"0.01\", bgcolor=\"#ffffff\", outputorder=\"%s\"];\n",
 					groesse, groesse, SortOrder));
 		}
-		Output.write(String.format(locale, "Edge[ fontname=\"BitStream\", fontsize=\"%f\"];\n", 12D * ZoomLinkText));
+		output.write(String.format(locale, "Edge[ fontname=\"BitStream\", fontsize=\"%f\"];\n", 12D * ZoomLinkText));
 		if (!db) {
 			nodeData = Maps.newHashMap();
-			Output.write(String.format(locale,
+			output.write(String.format(locale,
 					"Node[ fontname=\"BitStream\", shape=\"ellipse\", style=\"filled\", height=\"0\", fontsize=\"%f\", color=\"red\", penwidth=\"%f\"];\n",
 					12D * ZoomNodeText, ZoomNodeBorder));
 
 		} else {
-			Output.write(String.format(locale,
+			output.write(String.format(locale,
 					"Node[ fontname=\"BitStream\", shape=\"ellipse\", style=\"filled\", height=\"%f\", fontsize=\"%f\", color=\"red\", penwidth=\"%f\"];\n",
 					0.6D * ZoomNodeText, 8D * ZoomNodeText, ZoomNodeBorder));
 			nodeData = getNodeDataFromDb();
@@ -135,7 +136,7 @@ public class Topology {
 				Value = Math.max(new Period(DateTime.now().getMillis(), nodeProps.getKey().getMillis()).getDays(), 0D);
 			} else
 				Value = 0D;
-			Output.write(String.format(locale, "\"%s\" [label=\"%s\", fillcolor=\"#%s\"]\n", nodeIp, shortIp,
+			output.write(String.format(locale, "\"%s\" [label=\"%s\", fillcolor=\"#%s\"]\n", nodeIp, shortIp,
 					getNodeColor(Math.pow(0.5D, Value / gesehen), graph.isHna(node), hvip.contains(node.getMainIp()))));
 			for (Edge link : graph.getAdjacentEdges(node)) {
 				Node toNode;
@@ -144,27 +145,19 @@ public class Topology {
 				} else {
 					toNode = link.getToNode();
 				}
-				Output.write(String.format(locale,
+				output.write(String.format(locale,
 						"\"%s\" -- \"%s\" [label=\"%f\", color=\"#%s\", penwidth=\"%f\", len=\"%f\"];\n", nodeIp,
 						toNode.getMainIp().getHostAddress(), link.getEtx(), getLinkColor(link.getEtx()),
 						getLinkThickness(link.getEtx()) * ZoomLinkThickness, getLinkLength(link.getEtx())));
 			}
-			Output.write("}\n");
+			output.write("}\n");
 		}
 
-		Output.close();
-		if (GVProcess != null) {
-			InputStream inputStream = GVProcess.getInputStream();
-			ServletOutputStream outputStream = response.getOutputStream();
-			byte[] Buffer = new byte[1024];
-			while (true) {
-				int Read = inputStream.read(Buffer, 0, 1024);
-				if (Read == 0)
-					break;
-				outputStream.write(Buffer, 0, Read);
-				outputStream.flush();
-			}
-			GVProcess.destroy();
+		output.close();
+		if (graphVizProcess != null) {
+			graphVizProcess.waitFor();
+			ByteStreams.copy(new BufferedInputStream(graphVizProcess.getInputStream()), response.getOutputStream());
+			graphVizProcess.destroy();
 		}
 	}
 
